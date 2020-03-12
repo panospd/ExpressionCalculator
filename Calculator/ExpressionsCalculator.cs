@@ -70,7 +70,7 @@ namespace Calculator
 
             long leastCommonMultiple = FindLeastCommonMultiple(denominators);
 
-            List<long> adjustedNumerators = blocks
+            long[] adjustedNumerators = blocks
                 .Select((f, i) =>
                 {
                     string[] fraction = f.Split(_operator.Divisor);
@@ -83,7 +83,7 @@ namespace Calculator
 
                     return numerator * leastCommonMultiple / denominator;
                 })
-                .ToList();
+                .ToArray();
 
             long calculatedNumerator = operation(adjustedNumerators.ToArray());
             long greatestCommonDivisor = GreatestCommonDivisor(calculatedNumerator, leastCommonMultiple);
@@ -107,26 +107,26 @@ namespace Calculator
 
         private static long LeastCommonMultiple(long a, long b)
         {
-            long num1, num2;
+            long number1, number2;
 
             if (a > b)
             {
-                num1 = a; 
-                num2 = b;
+                number1 = a; 
+                number2 = b;
             }
             else
             {
-                num1 = b; 
-                num2 = a;
+                number1 = b; 
+                number2 = a;
             }
 
-            for (int i = 1; i < num2; i++)
+            for (int i = 1; i < number2; i++)
             {
-                if ((num1 * i) % num2 == 0)
-                    return i * num1;
+                if ((number1 * i) % number2 == 0)
+                    return i * number1;
             }
 
-            return num1 * num2;
+            return number1 * number2;
         }
 
         private string CalculateSummationExpressionBlock(string summationExpressionBlock)
