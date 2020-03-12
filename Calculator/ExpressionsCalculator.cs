@@ -98,11 +98,9 @@ namespace Calculator
             if (numbers.Length == 1)
                 return numbers[0];
 
-            long result = LeastCommonMultiple(numbers[0], numbers[1]);
-
             return numbers
-                .Skip(2)
-                .Aggregate(result, LeastCommonMultiple);
+                .Skip(1)
+                .Aggregate(numbers[0], LeastCommonMultiple);
         }
 
         private static long LeastCommonMultiple(long a, long b)
@@ -195,7 +193,7 @@ namespace Calculator
 
         private static long MultiplyNumbers(long[] numbers)
         {
-            var result = numbers[0];
+            long result = numbers[0];
 
             for (int i = 1; i < numbers.Length; i++)
                 result *= numbers[i];
