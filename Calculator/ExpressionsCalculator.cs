@@ -10,46 +10,41 @@ namespace Calculator
 
         public string Calculate(string input)
         {
-            string inputWithNoSpaces = input.Replace(" ", string.Empty);
-
-            string[] subtractAggregates = inputWithNoSpaces.Split(_operator.Minus);
-
-            string[] subtractBlocks = subtractAggregates
-                .Select(CalculateSubtractBlock)
+            string[] subtractionExpressionBlocks = input
+                .Replace(" ", string.Empty)
+                .Split(_operator.Minus)
+                .Select((b, i) => 
+                    i == 0 
+                    ? CalculateSubtractionExpressionBlock(b, SumNumbers) 
+                    : CalculateSubtractionExpressionBlock(b, SubtractNumbers))
                 .ToArray();
 
-            return PerformOperationForBlocks(subtractBlocks, SubtractNumbers);
+            return PerformOperationForExpressionBlocks(subtractionExpressionBlocks, SubtractNumbers);
         }
 
-        private static long SubtractNumbers(params long[] numbers)
+        private static long SubtractNumbers(long[] numbers)
         {
-            if (numbers.Length == 0)
-                return default;
-
-            var result = numbers[0];
-
             return numbers
-                .Skip(1)
-                .Aggregate(result, (current, number) => current - number);
+                .Select((n, i) => i == 0 ? n : n * -1)
+                .Sum();
         }
 
-        private static long SumOfNumbers(long[] numbers)
+        private static long SumNumbers(long[] numbers)
         {
             return numbers.Sum();
         }
 
-        private string CalculateSubtractBlock(string subtractAggregate)
+        private string CalculateSubtractionExpressionBlock(string subtractionExpressionBlock, Func<long[], long> operation)
         {
-            string[] sumAggregates = subtractAggregate.Split(_operator.Plus);
-
-            string[] sumBlocks = sumAggregates
-                .Select(CalculateSumBlock)
+            string[] summationExpressionBlocks = subtractionExpressionBlock
+                .Split(_operator.Plus)
+                .Select(CalculateSummationExpressionBlock)
                 .ToArray();
 
-            return PerformOperationForBlocks(sumBlocks, SumOfNumbers);
+            return PerformOperationForExpressionBlocks(summationExpressionBlocks, operation);
         }
 
-        private string PerformOperationForBlocks(string[] blocks, Func<long[], long> operation)
+        private string PerformOperationForExpressionBlocks(string[] blocks, Func<long[], long> operation)
         {
             if (blocks.Length == 1)
                 return blocks[0];
@@ -61,7 +56,7 @@ namespace Calculator
             if (!fractionBlocks.Any())
             {
                 long[] blocksToPerformOperationOn = blocks
-                    .Select(s => Convert.ToInt64(s))
+                    .Select((s, i) => Convert.ToInt64(s))
                     .ToArray();
 
                 return $"{operation(blocksToPerformOperationOn)}";
@@ -73,8 +68,8 @@ namespace Calculator
 
             long leastCommonMultiple = FindLeastCommonMultiple(denominators);
 
-            var adjustedNumerators = blocks
-                .Select(f =>
+            List<long> adjustedNumerators = blocks
+                .Select((f, i) =>
                 {
                     string[] fraction = f.Split(_operator.Divisor);
 
@@ -88,7 +83,7 @@ namespace Calculator
                 })
                 .ToList();
 
-            var calculatedNumerator = operation(adjustedNumerators.ToArray());
+            long calculatedNumerator = operation(adjustedNumerators.ToArray());
 
             var greatestCommonDivisor = GreatestCommonDivisor(calculatedNumerator, leastCommonMultiple);
 
@@ -133,28 +128,28 @@ namespace Calculator
             return num1 * num2;
         }
 
-        private string CalculateSumBlock(string sumAggregate)
+        private string CalculateSummationExpressionBlock(string summationExpressionBlock)
         {
-            string[] multiplyAggregates = sumAggregate.Split(_operator.Multiplier);
+            string[] multiplyExpressionBlocks = summationExpressionBlock.Split(_operator.Multiplier);
 
-            string[] fractions = multiplyAggregates
+            string[] fractions = multiplyExpressionBlocks
+                .Where(ma => ma.Contains(_operator.Divisor))
+                .ToArray();
+            
+            return fractions.Any() 
+                ? NumbersWithFractionsSummationBlock(multiplyExpressionBlocks) 
+                : WholeNumbersSummationBlock(multiplyExpressionBlocks);
+        }
+
+        private string NumbersWithFractionsSummationBlock(string[] multiplyExpressionBlocks)
+        {
+            string[] fractions = multiplyExpressionBlocks
                 .Where(ma => ma.Contains(_operator.Divisor))
                 .ToArray();
 
-            if (!fractions.Any())
-            {
-                long[] numbers = multiplyAggregates
-                    .Select(s => Convert.ToInt64(s))
-                    .ToArray();
-
-                long block = MultiplyNumbers(numbers);
-
-                return $"{block}";
-            }
-
             IEnumerable<long> firstElementsFromFractions = fractions.Select(s => Convert.ToInt64(s.Split(_operator.Divisor)[0]));
 
-            List<long> numeratorsContainer = multiplyAggregates
+            List<long> numeratorsContainer = multiplyExpressionBlocks
                 .Except(fractions)
                 .Select(s => Convert.ToInt64(s))
                 .ToList();
@@ -162,7 +157,7 @@ namespace Calculator
             numeratorsContainer.AddRange(firstElementsFromFractions);
 
             long numerator = MultiplyNumbers(numeratorsContainer.ToArray());
-            long denominator = CalculateDenominatorFromFractions(fractions);
+            long denominator = CalculateDenominatorForFractions(fractions);
 
             long greatCommonDivisor = GreatestCommonDivisor(numerator, denominator);
 
@@ -171,7 +166,16 @@ namespace Calculator
                 : $"{numerator / greatCommonDivisor}/{denominator / greatCommonDivisor}";
         }
 
-        private long CalculateDenominatorFromFractions(IEnumerable<string> fractions)
+        private static string WholeNumbersSummationBlock(string[] multiplyExpressionBlocks)
+        {
+            long[] numbers = multiplyExpressionBlocks
+                .Select(s => Convert.ToInt64(s))
+                .ToArray();
+
+            return $"{MultiplyNumbers(numbers)}";
+        }
+
+        private long CalculateDenominatorForFractions(IEnumerable<string> fractions)
         {
             long[] fractionElements = fractions
                 .Select(f =>

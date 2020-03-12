@@ -6,7 +6,7 @@ namespace Calculator
 {
     public class ExpressionsValidator
     {
-        public string[] _validOperators = new[] {"/", "*", "+", "-"};
+        public string[] _validOperators = {"/", "*", "+", "-"};
 
         public IList<ValidationResult> Validate(string input)
         {
@@ -14,34 +14,43 @@ namespace Calculator
 
             string inputToValidate = input.Replace(" ", string.Empty);
 
-            var hasValidCharacters = !string.IsNullOrEmpty(inputToValidate) && inputToValidate
-                .All(c => char.IsDigit(c) || _validOperators.Contains(c.ToString()));
+            bool hasValidCharacters =  inputToValidate.All(c => char.IsDigit(c) || _validOperators.Contains(c.ToString()));
 
             if(!hasValidCharacters)
                 validationResults.Add(new ValidationResult("Input can only contain digits, empty spaces and any of the operators \"+\", \"-\", \"*\" and \"/\""));
 
-            bool operatorsHaveNonConsecutivePositions = OperatorsHaveNonConsecutivePositions(inputToValidate);
+            bool containsAtLeastOneDigit = inputToValidate.Any(char.IsDigit);
 
-            if(!operatorsHaveNonConsecutivePositions)
+            if (!containsAtLeastOneDigit)
+                validationResults.Add(new ValidationResult("Input must contain at least one number"));
+
+            bool ooeratorsHaveConsecutivePositions = OperatorsHaveConsecutivePositions(inputToValidate);
+
+            if(ooeratorsHaveConsecutivePositions)
                 validationResults.Add(new ValidationResult("Input contains two or more consecutive operators"));
 
             return validationResults;
         }
 
-        private bool OperatorsHaveNonConsecutivePositions(string inputToValidate)
+        private bool OperatorsHaveConsecutivePositions(string inputToValidate)
         {
-            int[] operatorPositions = inputToValidate
-                .Select((c, i) => _validOperators.Contains(c.ToString()) ? i : default)
-                .Where(i => i != default)
+            int?[] operatorPositions = inputToValidate
+                .ToCharArray()
+                .Select((c, i) =>
+                {
+                    bool charIsValidOperator = _validOperators.Contains(c.ToString());
+                    return charIsValidOperator ? (int?)i : null;
+                })
+                .Where(i => i != null)
                 .ToArray();
 
             for (int i = 0; i < operatorPositions.Length - 1; i++)
             {
                 if (operatorPositions[i] == operatorPositions[i + 1] - 1)
-                    return false;
+                    return true;
             }
 
-            return true;
+            return false;
         }
     }
 }

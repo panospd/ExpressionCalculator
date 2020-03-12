@@ -9,12 +9,30 @@ namespace Calculator
     {
         static void Main(string[] args)
         {
+            var anotherRound = true;
+
+            while (anotherRound)
+            {
+                Run();
+
+                ConsoleKey keyPressed = PromptUserForAnotherRound();
+                anotherRound = keyPressed == ConsoleKey.Enter;
+            }
+        }
+
+        private static ConsoleKey PromptUserForAnotherRound()
+        {
+            Console.WriteLine("Press enter for another round or any other key to exit:");
+
+            return Console.ReadKey(true).Key;
+        }
+
+        private static void Run()
+        {
             Console.WriteLine("Please specify an expression below: ");
             var input = Console.ReadLine();
 
-            var validator = new ExpressionsValidator();
-
-            IList<ValidationResult> validationResults = validator.Validate(input);
+            IList<ValidationResult> validationResults = RunValidations(input);
 
             if (validationResults.Any())
             {
@@ -22,9 +40,22 @@ namespace Calculator
                 return;
             }
 
-            var expressionsCalculator = new ExpressionsCalculator();
+            string result = RunCalculation(input);
 
-            Console.WriteLine($"Result is: {expressionsCalculator.Calculate(input)}");
+            Console.WriteLine($"Result is: {result}");
+        }
+
+        private static IList<ValidationResult> RunValidations(string input)
+        {
+            var validator = new ExpressionsValidator();
+
+            return validator.Validate(input);
+        }
+
+        private static string RunCalculation(string input)
+        {
+            var expressionsCalculator = new ExpressionsCalculator();
+            return expressionsCalculator.Calculate(input);
         }
 
         private static void ShowValidations(IList<ValidationResult> validationResults)
