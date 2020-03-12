@@ -6,11 +6,13 @@ namespace Calculator
 {
     public class ExpressionsCalculator
     {
+        private readonly Operator _operator = new Operator();
+
         public string Calculate(string input)
         {
             string inputWithNoSpaces = input.Replace(" ", string.Empty);
 
-            string[] subtractAggregates = inputWithNoSpaces.Split("-");
+            string[] subtractAggregates = inputWithNoSpaces.Split(_operator.Minus);
 
             string[] subtractBlocks = subtractAggregates
                 .Select(CalculateSubtractBlock)
@@ -36,9 +38,9 @@ namespace Calculator
             return numbers.Sum();
         }
 
-        private static string CalculateSubtractBlock(string subtractAggregate)
+        private string CalculateSubtractBlock(string subtractAggregate)
         {
-            string[] sumAggregates = subtractAggregate.Split("+");
+            string[] sumAggregates = subtractAggregate.Split(_operator.Plus);
 
             string[] sumBlocks = sumAggregates
                 .Select(CalculateSumBlock)
@@ -47,13 +49,13 @@ namespace Calculator
             return PerformOperationForBlocks(sumBlocks, SumOfNumbers);
         }
 
-        private static string PerformOperationForBlocks(string[] blocks, Func<long[], long> operation)
+        private string PerformOperationForBlocks(string[] blocks, Func<long[], long> operation)
         {
             if (blocks.Length == 1)
                 return blocks[0];
 
             string[] fractionBlocks = blocks
-                .Where(b => b.Contains("/"))
+                .Where(b => b.Contains(_operator.Divisor))
                 .ToArray();
 
             if (!fractionBlocks.Any())
@@ -66,7 +68,7 @@ namespace Calculator
             }
 
             long[] denominators = fractionBlocks
-                .Select(s => Convert.ToInt64(s.Split("/")[1]))
+                .Select(s => Convert.ToInt64(s.Split(_operator.Divisor)[1]))
                 .ToArray();
 
             long leastCommonMultiple = FindLeastCommonMultiple(denominators);
@@ -74,7 +76,7 @@ namespace Calculator
             var adjustedNumerators = blocks
                 .Select(f =>
                 {
-                    string[] fraction = f.Split("/");
+                    string[] fraction = f.Split(_operator.Divisor);
 
                     if (fraction.Length == 1)
                         return Convert.ToInt64(fraction[0]) * leastCommonMultiple;
@@ -110,6 +112,7 @@ namespace Calculator
         private static long LeastCommonMultiple(long a, long b)
         {
             long num1, num2;
+
             if (a > b)
             {
                 num1 = a; 
@@ -130,12 +133,12 @@ namespace Calculator
             return num1 * num2;
         }
 
-        private static string CalculateSumBlock(string sumAggregate)
+        private string CalculateSumBlock(string sumAggregate)
         {
-            string[] multiplyAggregates = sumAggregate.Split("*");
+            string[] multiplyAggregates = sumAggregate.Split(_operator.Multiplier);
 
             string[] fractions = multiplyAggregates
-                .Where(ma => ma.Contains("/"))
+                .Where(ma => ma.Contains(_operator.Divisor))
                 .ToArray();
 
             if (!fractions.Any())
@@ -149,7 +152,7 @@ namespace Calculator
                 return $"{block}";
             }
 
-            IEnumerable<long> firstElementsFromFractions = fractions.Select(s => Convert.ToInt64(s.Split("/")[0]));
+            IEnumerable<long> firstElementsFromFractions = fractions.Select(s => Convert.ToInt64(s.Split(_operator.Divisor)[0]));
 
             List<long> numeratorsContainer = multiplyAggregates
                 .Except(fractions)
@@ -168,12 +171,12 @@ namespace Calculator
                 : $"{numerator / greatCommonDivisor}/{denominator / greatCommonDivisor}";
         }
 
-        private static long CalculateDenominatorFromFractions(IEnumerable<string> fractions)
+        private long CalculateDenominatorFromFractions(IEnumerable<string> fractions)
         {
             long[] fractionElements = fractions
                 .Select(f =>
                 {
-                    long[] numbersToMultiply = f.Split("/")
+                    long[] numbersToMultiply = f.Split(_operator.Divisor)
                         .Skip(1)
                         .Select(s => Convert.ToInt64(s))
                         .ToArray();
@@ -193,11 +196,6 @@ namespace Calculator
                 result *= numbers[i];
 
             return result;
-        }
-
-        private static bool IsDigit(string input)
-        {
-            return input.Length == 1 && char.IsDigit(input.ToCharArray()[0]);
         }
 
         private static long GreatestCommonDivisor(long a, long b)

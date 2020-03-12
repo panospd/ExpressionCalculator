@@ -14,21 +14,21 @@ namespace Calculator
 
             string inputToValidate = input.Replace(" ", string.Empty);
 
-            var hasValidCharacters = inputToValidate
+            var hasValidCharacters = !string.IsNullOrEmpty(inputToValidate) && inputToValidate
                 .All(c => char.IsDigit(c) || _validOperators.Contains(c.ToString()));
 
             if(!hasValidCharacters)
-                validationResults.Add(new ValidationResult("Input can only contain digits, empty spaces and the operators \"+\", \"-\", \"*\" and \"/\""));
+                validationResults.Add(new ValidationResult("Input can only contain digits, empty spaces and any of the operators \"+\", \"-\", \"*\" and \"/\""));
 
-            bool operatorsHaveValidPositions = OperatorsHaveValidPositions(inputToValidate);
+            bool operatorsHaveNonConsecutivePositions = OperatorsHaveNonConsecutivePositions(inputToValidate);
 
-            if(!operatorsHaveValidPositions)
-                validationResults.Add(new ValidationResult("Input is in invalid format."));
+            if(!operatorsHaveNonConsecutivePositions)
+                validationResults.Add(new ValidationResult("Input contains two or more consecutive operators"));
 
             return validationResults;
         }
 
-        private bool OperatorsHaveValidPositions(string inputToValidate)
+        private bool OperatorsHaveNonConsecutivePositions(string inputToValidate)
         {
             int[] operatorPositions = inputToValidate
                 .Select((c, i) => _validOperators.Contains(c.ToString()) ? i : default)

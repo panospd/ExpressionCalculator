@@ -9,7 +9,8 @@ namespace Calculator
     {
         static void Main(string[] args)
         {
-            var input = "15 ++ 2 * 16 / 4 - 2 / 3";
+            Console.WriteLine("Please specify an expression below: ");
+            var input = Console.ReadLine();
 
             var validator = new ExpressionsValidator();
 
@@ -17,17 +18,20 @@ namespace Calculator
 
             if (validationResults.Any())
             {
-                foreach (var validationResult in validationResults)
-                    Console.WriteLine(validationResult.ErrorMessage);
-
+                ShowValidations(validationResults);
                 return;
             }
 
             var expressionsCalculator = new ExpressionsCalculator();
 
-            Console.WriteLine(expressionsCalculator.Calculate(input));
+            Console.WriteLine($"Result is: {expressionsCalculator.Calculate(input)}");
         }
 
+        private static void ShowValidations(IList<ValidationResult> validationResults)
+        {
+            foreach (var validationResult in validationResults)
+                Console.WriteLine(validationResult.ErrorMessage);
+        }
         
     }
 }
