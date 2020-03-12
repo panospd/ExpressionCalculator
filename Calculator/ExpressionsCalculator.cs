@@ -53,8 +53,16 @@ namespace Calculator
                 .Where(b => b.Contains(_operator.Divisor))
                 .ToArray();
 
-            if (!fractionBlocks.Any())
-                return PerformOperationOnWholeNumbersBlock(blocks, operation);
+            return !fractionBlocks.Any() 
+                ? PerformOperationOnWholeNumbersBlock(blocks, operation) 
+                : PerformOperationOnNumbersExpressionWithFractions(blocks, operation);
+        }
+
+        private string PerformOperationOnNumbersExpressionWithFractions(string[] blocks, Func<long[], long> operation)
+        {
+            string[] fractionBlocks = blocks
+                .Where(b => b.Contains(_operator.Divisor))
+                .ToArray();
 
             long[] denominators = fractionBlocks
                 .Select(s => Convert.ToInt64(s.Split(_operator.Divisor)[1]))
