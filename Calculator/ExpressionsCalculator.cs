@@ -54,13 +54,7 @@ namespace Calculator
                 .ToArray();
 
             if (!fractionBlocks.Any())
-            {
-                long[] blocksToPerformOperationOn = blocks
-                    .Select((s, i) => Convert.ToInt64(s))
-                    .ToArray();
-
-                return $"{operation(blocksToPerformOperationOn)}";
-            }
+                return PerformOperationOnWholeNumbersBlock(blocks, operation);
 
             long[] denominators = fractionBlocks
                 .Select(s => Convert.ToInt64(s.Split(_operator.Divisor)[1]))
@@ -84,8 +78,7 @@ namespace Calculator
                 .ToList();
 
             long calculatedNumerator = operation(adjustedNumerators.ToArray());
-
-            var greatestCommonDivisor = GreatestCommonDivisor(calculatedNumerator, leastCommonMultiple);
+            long greatestCommonDivisor = GreatestCommonDivisor(calculatedNumerator, leastCommonMultiple);
 
             return greatestCommonDivisor == leastCommonMultiple
                 ? $"{greatestCommonDivisor}"
@@ -138,7 +131,7 @@ namespace Calculator
             
             return fractions.Any() 
                 ? NumbersWithFractionsSummationBlock(multiplyExpressionBlocks) 
-                : WholeNumbersSummationBlock(multiplyExpressionBlocks);
+                : PerformOperationOnWholeNumbersBlock(multiplyExpressionBlocks, MultiplyNumbers);
         }
 
         private string NumbersWithFractionsSummationBlock(string[] multiplyExpressionBlocks)
@@ -166,13 +159,13 @@ namespace Calculator
                 : $"{numerator / greatCommonDivisor}/{denominator / greatCommonDivisor}";
         }
 
-        private static string WholeNumbersSummationBlock(string[] multiplyExpressionBlocks)
+        private static string PerformOperationOnWholeNumbersBlock(string[] expressionBlocks, Func<long[], long> operation)
         {
-            long[] numbers = multiplyExpressionBlocks
+            long[] numbers = expressionBlocks
                 .Select(s => Convert.ToInt64(s))
                 .ToArray();
 
-            return $"{MultiplyNumbers(numbers)}";
+            return $"{operation(numbers)}";
         }
 
         private long CalculateDenominatorForFractions(IEnumerable<string> fractions)
